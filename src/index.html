@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home Work #09</title>
+    <style>
+        th {
+            background: #808080;
+            color: #fff;
+            cursor: pointer;
+            font-weight: normal;
+            text-align: left;
+            text-transform: capitalize;
+            vertical-align: baseline;
+            white-space: nowrap;
+        }
+        th:hover {
+            color: #000;
+        }
+        th:hover::after {
+            color: inherit;
+            content: " \025B8";
+        }
+        th::after {
+            color: transparent;
+            content: " \025B8";
+        }
+        th[asc='true'] {
+            color: #000;
+        }
+        th[asc='true']::after {
+            color: inherit;
+            content: " \025BE";
+        }
+        th[asc='false'] {
+            color: #000;
+        }
+        th[asc='false']::after {
+            color: inherit;
+            content: " \025B4";
+        }
+    </style>
+</head>
+<body>
+</body>
+</html>

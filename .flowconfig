@@ -1,0 +1,10 @@
+[ignore]
+
+[include]
+
+[libs]
+./flow-typed/npm/
+
+[options]
+module.name_mapper='.*\.\(styl\|svg\|png\|jpg\|cur\)$' -> 'Stub'
+unsafe.enable_getters_and_setters=true
