@@ -1,6 +1,6 @@
 // @flow
 
-import DataTable from './data-table';
+import DataTable from '../src/data-table';
 //#import laureates from './laureate.json';
 
 var data = null, table = null;
@@ -25,7 +25,7 @@ describe('DataTable', function() {
       if (methods.length == 2) {
         done()
       } else {
-        var err = 'not match number of a functyions'
+        var err = 'not match number of a functions'
         done(err);
       }
     });
