@@ -6,20 +6,23 @@ export default class DataTable {
     parent: HTMLElement;
     data: Data;
     data_values: Array<Array<Data>>;
+    display_items_count: number;
+    current_page_number: number;
+
     constructor(parent: HTMLElement) {
         this.parent = parent;
     }
 
     build(data: Data) {
 
-        const context = this;
+        const context: Object = this;
         this.data_values = [];
         this.display_items_count = 10;
         this.current_page_number = 0;
         this.data = data;
 
         let keys = Object.keys(data[0]);
-        let data_arr = data.map((e, i) => {
+        let data_arr: Array<mixed> = data.map((e, i) => {
             return Object.values(data[i])
         });
         context.data_values = data_arr;
@@ -37,11 +40,10 @@ export default class DataTable {
                 let th: any = this.parent.getElementsByTagName('th')[i];
                 th.addEventListener('click', (e) => {
                     let sortByColumnName = e.target.innerText;
-                    let t = this.parent.getElementsByTagName('table')[0];
-
+                    let t: any = this.parent.getElementsByTagName('table')[0];
                     let prev_e_asc_state = e.target.getAttribute('asc');
-                    prev_e_asc_state = (prev_e_asc_state == 'true') ? true : prev_e_asc_state;
-                    prev_e_asc_state = (prev_e_asc_state == 'false') ? false : prev_e_asc_state;
+                    prev_e_asc_state = (prev_e_asc_state == 'true') ? true : prev_e_asc_state ||
+                    (prev_e_asc_state == 'false') ? false : prev_e_asc_state;
 
                     let new_e_asc_state;
                     switch (prev_e_asc_state) {
@@ -68,7 +70,7 @@ export default class DataTable {
         };
 
         const rebuild = () => {
-            let table = this.parent.getElementsByTagName('table')[0];
+            let table: any = this.parent.getElementsByTagName('table')[0];
             table.innerText = '';
             table.setAttribute('style', 'margin-top: 20px; border-spacing: 0');
             let tr = document.createElement('tr');
@@ -95,7 +97,7 @@ export default class DataTable {
             bind_table_headers();
         };
 
-        const sort = (data_arr, data_headers, asc = true, sorted_by = null, display_count = 10, page_number = 0) => {
+        const sort = (data_arr: Array<mixed>, data_headers, asc: ?boolean = true, sorted_by = null, display_count = 10, page_number = 0) => {
             const transpose = (array) => {
                 let transposed = [],
                     row,
@@ -146,7 +148,7 @@ export default class DataTable {
 
             // build sorted matrix by ordered indices
             let sorted_arr2D = [];
-            transposed_arr_2D.forEach( (row, i) => {
+            transposed_arr_2D.forEach((row, i) => {
                 let sorted_row = [];
                 for (i = 0; i < indices.length; i++) {
                     sorted_row.push(row[indices[i]]);
@@ -163,7 +165,7 @@ export default class DataTable {
         let sorted = sort(data_arr, keys, true, null, getDisplayItemsCount(), getCurrentPageNumber());
 
         const buildFromArray = (data, keys) => {
-            let table = document.createElement('table');
+            let table: any = document.createElement('table');
             table.main_data = {data: data, keys: keys};
             table.setAttribute('asc', true);
             this.parent.appendChild(table);
@@ -171,9 +173,9 @@ export default class DataTable {
         };
 
         buildFromArray(sorted['data'], sorted['keys']);
-        const stringPages: Array<number> = [10, 20, 30, 50, 100, 300, 500, 800];
+        const stringpages: Array<number> = [10, 20, 30, 50, 100, 300, 500, 800];
         let firstElement: number = 0;
-        let numberOfViewElement: number = stringPages[0];
+        let numberOfViewElement: number = stringpages[0];
 
 
         const select = document.createElement('select');
@@ -183,7 +185,7 @@ export default class DataTable {
             numberOfViewElement = +select.value;
             firstElement = firstElement - (firstElement % +select.value);
             context.display_items_count = numberOfViewElement;
-            let t = this.parent.getElementsByTagName('table')[0];
+            let t: any = this.parent.getElementsByTagName('table')[0];
             let asc = t.getAttribute('asc');
 
             let sortByColumnName = t.getAttribute('sort_column_index') ?
@@ -199,11 +201,12 @@ export default class DataTable {
             option.innerText = value.toString();
             select.appendChild(option);
         };
-        stringPages.forEach(item => addSelectOption(select, item));
+        stringpages.forEach(item => addSelectOption(select, item));
 
 
         const Paginations = () => {
-            if(!!this.parent.querySelector('#paginationButtons')) this.parent.querySelector('#paginationButtons').remove();
+            let domButton = this.parent.querySelector('#paginationButtons');
+            if (!!domButton) domButton.remove();
             let block = document.createElement('div');
             block.style.marginTop = '10px';
             block.style.float = 'right';
@@ -223,7 +226,7 @@ export default class DataTable {
                     context.current_page_number = value - 1;
                     Paginations();
                     let keys = Object.keys(data[0]);
-                    let t = this.parent.getElementsByTagName('table')[0];
+                    let t: any = this.parent.getElementsByTagName('table')[0];
                     let asc = t.getAttribute('asc');
                     switch (asc) {
                         case 'true':
@@ -247,21 +250,23 @@ export default class DataTable {
                 if (dots) dots.appendChild(dotsblock);
                 dotsblock.innerText = '...';
             };
-            let Pages: number = Math.ceil((this.data.length - 1) / numberOfViewElement);
+            let pages: number = Math.ceil((this.data.length - 1) / numberOfViewElement);
             let numberPage: number = Math.ceil((firstElement - 1) / numberOfViewElement);
             addButton(block, 1);
             if (numberPage > 1) {
                 if (numberPage > 2) addDots(block);
                 addButton(block, numberPage);
             }
-            if (numberPage > 0 && numberPage < Pages - 1) {
+            if (numberPage > 0 && numberPage < pages - 1) {
                 addButton(block, numberPage + 1);
             }
-            if (numberPage < Pages - 2) {
+            if (numberPage < pages - 2) {
                 addButton(block, numberPage + 2);
-                // if (numberPage < Pages - 3) addDots(block);
             }
-            if (Pages > 1) addButton(block, Pages);
+            if (numberPage < pages - 3) {
+                addButton(block, numberPage + 3);
+            }
+            if (pages > 1) addButton(block, pages);
         };
         Paginations();
 
