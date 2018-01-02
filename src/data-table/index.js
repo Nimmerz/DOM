@@ -3,18 +3,17 @@
 type Data = Array<{ [key: string]: any }>;
 
 export default class DataTable {
+
     parent: HTMLElement;
     data: Data;
     data_values: Array<Array<Data>>;
     display_items_count: number;
     current_page_number: number;
-
     constructor(parent: HTMLElement) {
         this.parent = parent;
     }
 
     build(data: Data) {
-
         const context: Object = this;
         this.data_values = [];
         this.display_items_count = 10;
@@ -66,7 +65,7 @@ export default class DataTable {
                     e.target.setAttribute('asc', new_e_asc_state);
                     rebuild();
                 });
-            };
+            }
         };
 
         const rebuild = () => {
@@ -122,12 +121,16 @@ export default class DataTable {
                 return indices;
             };
 
+            let pages = Math.ceil((this.data.length - 1) / display_count);
+            if (pages < page_number) page_number = pages - 1;
+
             let from = page_number * display_count;
             let to = page_number * display_count + display_count - 1;
+            if (to > this.data.length - 1) to = this.data.length;
             data_arr = context.data_values.slice(from, to);
             data_arr = asc == false ? data_arr.reverse() : data_arr;
-            // paginate array
 
+            // paginate array
             if (asc == null) {
                 return {
                     'data': data_arr,
@@ -148,7 +151,7 @@ export default class DataTable {
 
             // build sorted matrix by ordered indices
             let sorted_arr2D = [];
-            transposed_arr_2D.forEach((row, i) => {
+            transposed_arr_2D.forEach( (row, i) => {
                 let sorted_row = [];
                 for (i = 0; i < indices.length; i++) {
                     sorted_row.push(row[indices[i]]);
@@ -171,20 +174,19 @@ export default class DataTable {
             this.parent.appendChild(table);
             rebuild();
         };
-
         buildFromArray(sorted['data'], sorted['keys']);
-        const stringpages: Array<number> = [10, 20, 30, 50, 100, 300, 500, 800];
-        let firstElement: number = 0;
-        let numberOfViewElement: number = stringpages[0];
 
+        const stringPages: Array<number> = [10, 20, 30, 50, 100, 300, 500, 800];
+        let firstElement: number = 0;
+        let numberOfElements: number = stringPages[0];
 
         const select = document.createElement('select');
         if (this.parent) this.parent.appendChild(select);
         select.style.margin = '20px';
         select.onchange = () => {
-            numberOfViewElement = +select.value;
+            numberOfElements = +select.value;
             firstElement = firstElement - (firstElement % +select.value);
-            context.display_items_count = numberOfViewElement;
+            context.display_items_count = numberOfElements;
             let t: any = this.parent.getElementsByTagName('table')[0];
             let asc = t.getAttribute('asc');
 
@@ -195,34 +197,40 @@ export default class DataTable {
             Paginations();
             rebuild();
         };
-        const addSelectOption = (select: HTMLElement, value: number) => {
-            let option = document.createElement('option');
-            option.value = value.toString();
-            option.innerText = value.toString();
-            select.appendChild(option);
-        };
-        stringpages.forEach(item => addSelectOption(select, item));
 
+        const addSelect = (select: HTMLElement, value: number) => {
+            let selectOption = document.createElement('option');
+            selectOption.value = value.toString();
+            selectOption.innerText = value.toString();
+            select.appendChild(selectOption);
+        };
+        stringPages.forEach(item => addSelect(select, item));
+
+        const addDots = (dots) => {
+            const dotsblock = document.createElement('span');
+            if (dots) dots.appendChild(dotsblock);
+            dotsblock.innerText = '...';
+        };
 
         const Paginations = () => {
-            let domButton = this.parent.querySelector('#paginationButtons');
-            if (!!domButton) domButton.remove();
+            let domButton  = this.parent.querySelector('#buttons');
+            if(!!domButton) domButton.remove();
             let block = document.createElement('div');
             block.style.marginTop = '10px';
             block.style.float = 'right';
             if (this.parent) this.parent.appendChild(block);
-            block.id = 'paginationButtons';
+            block.id = 'buttons';
 
-            const addButton = (parent: ?HTMLElement, value: number) => {
+            const addButtons = (parent: ?HTMLElement, value: number) => {
                 const button = document.createElement('button');
                 if (parent) parent.appendChild(button);
                 button.innerText = (value).toString();
                 button.value = (value).toString();
-                button.style.margin = '0 5px';
-                button.disabled = (value - 1) * numberOfViewElement <= firstElement &&
-                    firstElement < value * numberOfViewElement;
+                button.style.margin = '0 8px';
+                button.disabled = (value - 1) * numberOfElements <= firstElement &&
+                    firstElement < value * numberOfElements;
                 button.addEventListener('click', () => {
-                    firstElement = numberOfViewElement * (value - 1);
+                    firstElement = numberOfElements * (value - 1);
                     context.current_page_number = value - 1;
                     Paginations();
                     let keys = Object.keys(data[0]);
@@ -245,28 +253,25 @@ export default class DataTable {
                     rebuild();
                 });
             };
-            const addDots = (dots) => {
-                const dotsblock = document.createElement('span');
-                if (dots) dots.appendChild(dotsblock);
-                dotsblock.innerText = '...';
-            };
-            let pages: number = Math.ceil((this.data.length - 1) / numberOfViewElement);
-            let numberPage: number = Math.ceil((firstElement - 1) / numberOfViewElement);
-            addButton(block, 1);
+
+            let pages: number = Math.ceil((this.data.length - 1) / numberOfElements);
+            let numberPage: number = Math.ceil((firstElement - 1) / numberOfElements);
+            if (numberPage > pages) numberPage = pages;
+            addButtons(block, 1);
             if (numberPage > 1) {
                 if (numberPage > 2) addDots(block);
-                addButton(block, numberPage);
+                addButtons(block, numberPage);
             }
             if (numberPage > 0 && numberPage < pages - 1) {
-                addButton(block, numberPage + 1);
+                addButtons(block, numberPage + 1);
             }
             if (numberPage < pages - 2) {
-                addButton(block, numberPage + 2);
+                addButtons(block, numberPage + 2);
             }
             if (numberPage < pages - 3) {
-                addButton(block, numberPage + 3);
+                addButtons(block, numberPage + 3);
             }
-            if (pages > 1) addButton(block, pages);
+            if (pages > 1) addButtons(block, pages);
         };
         Paginations();
 
