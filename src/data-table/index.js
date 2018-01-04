@@ -3,7 +3,6 @@
 type Data = Array<{ [key: string]: any }>;
 
 export default class DataTable {
-
     parent: HTMLElement;
     data: Data;
     data_values: Array<Array<Data>>;
@@ -12,15 +11,24 @@ export default class DataTable {
     constructor(parent: HTMLElement) {
         this.parent = parent;
     }
-
     build(data: Data) {
         const context: Object = this;
         this.data_values = [];
         this.display_items_count = 10;
         this.current_page_number = 0;
         this.data = data;
-
         let keys = Object.keys(data[0]);
+
+        data = data.map((person) => {
+            let person_full_hash = {};
+            keys.forEach((key) => {
+                let pair = {};
+                pair[key] = person[key];
+                person_full_hash = Object.assign(person_full_hash, pair);
+            });
+            return person_full_hash;
+        });
+
         let data_arr: Array<mixed> = data.map((e, i) => {
             return Object.values(data[i])
         });
@@ -58,7 +66,6 @@ export default class DataTable {
                         default:
                             alert('Wrong value!!!!');
                     }
-
                     t.main_data = sort(t.main_data['data'], t.main_data['keys'], new_e_asc_state, sortByColumnName, getDisplayItemsCount(), getCurrentPageNumber());
                     t.setAttribute('sort_column_index', e.target.getAttribute('column_index'));
                     t.setAttribute('asc', new_e_asc_state);
@@ -91,7 +98,6 @@ export default class DataTable {
                     tr.appendChild(td);
                     td.innerText = item;
                 });
-
             });
             bind_table_headers();
         };
@@ -121,12 +127,12 @@ export default class DataTable {
                 return indices;
             };
 
-            let pages = Math.ceil((this.data.length - 1) / display_count);
+
+            let pages = Math.ceil(this.data.length / display_count);
             if (pages < page_number) page_number = pages - 1;
 
             let from = page_number * display_count;
             let to = page_number * display_count + display_count - 1;
-            if (to > this.data.length - 1) to = this.data.length;
             data_arr = context.data_values.slice(from, to);
             data_arr = asc == false ? data_arr.reverse() : data_arr;
 
@@ -270,6 +276,7 @@ export default class DataTable {
             }
             if (numberPage < pages - 3) {
                 addButtons(block, numberPage + 3);
+                if (numberPage < pages - 3) addDots(block);
             }
             if (pages > 1) addButtons(block, pages);
         };
