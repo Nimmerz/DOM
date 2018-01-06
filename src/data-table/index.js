@@ -8,6 +8,8 @@ export default class DataTable {
     data_values: Array<Array<Data>>;
     display_items_count: number;
     current_page_number: number;
+    tablebody: HTMLElement;
+    selectblock: HTMLElement;
     constructor(parent: HTMLElement) {
         this.parent = parent;
     }
@@ -18,6 +20,10 @@ export default class DataTable {
         this.current_page_number = 0;
         this.data = data;
         let keys = Object.keys(data[0]);
+        this.tablebody = document.createElement('div');
+        this.selectblock = document.createElement('div');
+        this.parent.appendChild(this.tablebody);
+        this.parent.appendChild(this.selectblock);
 
         data = data.map((person) => {
             let person_full_hash = {};
@@ -33,74 +39,6 @@ export default class DataTable {
             return Object.values(data[i])
         });
         context.data_values = data_arr;
-
-        const getDisplayItemsCount = () => {
-            return context.display_items_count;
-        };
-
-        const getCurrentPageNumber = () => {
-            return context.current_page_number;
-        };
-
-        const bind_table_headers = () => {
-            for (let i = 0; i < this.parent.getElementsByTagName('th').length; i++) {
-                let th: any = this.parent.getElementsByTagName('th')[i];
-                th.addEventListener('click', (e) => {
-                    let sortByColumnName = e.target.innerText;
-                    let t: any = this.parent.getElementsByTagName('table')[0];
-                    let prev_e_asc_state = e.target.getAttribute('asc');
-                    prev_e_asc_state = (prev_e_asc_state == 'true') ? true : prev_e_asc_state ||
-                    (prev_e_asc_state == 'false') ? false : prev_e_asc_state;
-
-                    let new_e_asc_state;
-                    switch (prev_e_asc_state) {
-                        case null:
-                            new_e_asc_state = true;
-                            break;
-                        case true:
-                            new_e_asc_state = false;
-                            break;
-                        case false:
-                            new_e_asc_state = true;
-                            break;
-                        default:
-                            alert('Wrong value!!!!');
-                    }
-                    t.main_data = sort(t.main_data['data'], t.main_data['keys'], new_e_asc_state, sortByColumnName, getDisplayItemsCount(), getCurrentPageNumber());
-                    t.setAttribute('sort_column_index', e.target.getAttribute('column_index'));
-                    t.setAttribute('asc', new_e_asc_state);
-                    e.target.setAttribute('asc', new_e_asc_state);
-                    rebuild();
-                });
-            }
-        };
-
-        const rebuild = () => {
-            let table: any = this.parent.getElementsByTagName('table')[0];
-            table.innerText = '';
-            table.setAttribute('style', 'margin-top: 20px; border-spacing: 0');
-            let tr = document.createElement('tr');
-            table.appendChild(tr);
-            table.main_data['keys'].forEach((key, index) => {
-                let th = document.createElement('th');
-                th.innerText = key;
-                if (index == table.getAttribute('sort_column_index')) {
-                    th.setAttribute('asc', table.getAttribute('asc'));
-                }
-                th.setAttribute('column_index', index);
-                tr.appendChild(th);
-            });
-            table.main_data['data'].forEach((data_row) => {
-                let tr = document.createElement('tr');
-                table.appendChild(tr);
-                data_row.forEach((item) => {
-                    let td = document.createElement('td');
-                    tr.appendChild(td);
-                    td.innerText = item;
-                });
-            });
-            bind_table_headers();
-        };
 
         const sort = (data_arr: Array<mixed>, data_headers, asc: ?boolean = true, sorted_by = null, display_count = 10, page_number = 0) => {
             const transpose = (array) => {
@@ -171,13 +109,86 @@ export default class DataTable {
             }
         };
 
+        const getDisplayItemsCount = () => {
+            return context.display_items_count;
+        };
+
+        const getCurrentPageNumber = () => {
+            return context.current_page_number;
+        };
+
+        const bind_table_headers = () => {
+            for (let i = 0; i < this.tablebody.getElementsByTagName('th').length; i++) {
+                let th: any = this.tablebody.getElementsByTagName('th')[i];
+                th.addEventListener('click', (e) => {
+                    let sortByColumnName = e.target.innerText;
+                    let t: any = this.tablebody.getElementsByTagName('table')[0];
+                    let prev_e_asc_state = e.target.getAttribute('asc');
+                    prev_e_asc_state = (prev_e_asc_state == 'true') ? true : prev_e_asc_state ||
+                    (prev_e_asc_state == 'false') ? false : prev_e_asc_state;
+
+                    let new_e_asc_state;
+                    switch (prev_e_asc_state) {
+                        case null:
+                            new_e_asc_state = true;
+                            break;
+                        case true:
+                            new_e_asc_state = false;
+                            break;
+                        case false:
+                            new_e_asc_state = true;
+                            break;
+                        default:
+                            alert('Wrong value!!!!');
+                    }
+                    t.main_data = sort(t.main_data['data'], t.main_data['keys'], new_e_asc_state, sortByColumnName, getDisplayItemsCount(), getCurrentPageNumber());
+                    t.setAttribute('sort_column_index', e.target.getAttribute('column_index'));
+                    t.setAttribute('asc', new_e_asc_state);
+                    e.target.setAttribute('asc', new_e_asc_state);
+                    rebuild();
+                });
+            }
+        };
+
+        const rebuild = () => {
+            let table: any = this.tablebody.getElementsByTagName('table')[0];
+            this.tablebody.appendChild(table);
+            table.innerText = '';
+            table.setAttribute('style', 'margin-top: 20px; border-spacing: 0');
+            let tr = document.createElement('tr');
+            table.appendChild(tr);
+            table.main_data['keys'].forEach((key, index) => {
+                let th = document.createElement('th');
+                th.innerText = key;
+                if (index == table.getAttribute('sort_column_index')) {
+                    th.setAttribute('asc', table.getAttribute('asc'));
+                }
+                th.setAttribute('column_index', index);
+                tr.appendChild(th);
+            });
+            table.main_data['data'].forEach((data_row) => {
+                let tr = document.createElement('tr');
+                table.appendChild(tr);
+                data_row.forEach((item) => {
+                    let td = document.createElement('td');
+                    tr.appendChild(td);
+                    if (typeof item != 'undefined') {
+                        td.innerText = item;
+                    };
+                });
+            });
+            bind_table_headers();
+        };
+
+
+
         let sorted = sort(data_arr, keys, true, null, getDisplayItemsCount(), getCurrentPageNumber());
 
         const buildFromArray = (data, keys) => {
             let table: any = document.createElement('table');
             table.main_data = {data: data, keys: keys};
             table.setAttribute('asc', true);
-            this.parent.appendChild(table);
+            this.tablebody.appendChild(table);
             rebuild();
         };
         buildFromArray(sorted['data'], sorted['keys']);
@@ -187,18 +198,18 @@ export default class DataTable {
         let numberOfElements: number = stringPages[0];
 
         const select = document.createElement('select');
-        if (this.parent) this.parent.appendChild(select);
+        if (this.selectblock)  this.selectblock.appendChild(select);
         select.style.margin = '20px';
         select.onchange = () => {
             numberOfElements = +select.value;
             firstElement = firstElement - (firstElement % +select.value);
             context.display_items_count = numberOfElements;
-            let t: any = this.parent.getElementsByTagName('table')[0];
+            let t: any = this.tablebody.getElementsByTagName('table')[0];
             let asc = t.getAttribute('asc');
 
             let sortByColumnName = t.getAttribute('sort_column_index') ?
-                this.parent.getElementsByTagName('th')[t.getAttribute('sort_column_index')].innerText :
-                this.parent.getElementsByTagName('th')[0].innerText;
+                this.tablebody.getElementsByTagName('th')[t.getAttribute('sort_column_index')].innerText :
+                this.tablebody.getElementsByTagName('th')[0].innerText;
             t.main_data = sort(t.main_data['data'], t.main_data['keys'], asc, sortByColumnName, getDisplayItemsCount(), getCurrentPageNumber());
             Paginations();
             rebuild();
@@ -219,12 +230,12 @@ export default class DataTable {
         };
 
         const Paginations = () => {
-            let domButton  = this.parent.querySelector('#buttons');
+            let domButton  =  this.selectblock.querySelector('#buttons');
             if(!!domButton) domButton.remove();
             let block = document.createElement('div');
-            block.style.marginTop = '10px';
+            block.style.marginTop = '15px';
             block.style.float = 'right';
-            if (this.parent) this.parent.appendChild(block);
+            if (this.selectblock) this.selectblock.appendChild(block);
             block.id = 'buttons';
 
             const addButtons = (parent: ?HTMLElement, value: number) => {
@@ -240,7 +251,7 @@ export default class DataTable {
                     context.current_page_number = value - 1;
                     Paginations();
                     let keys = Object.keys(data[0]);
-                    let t: any = this.parent.getElementsByTagName('table')[0];
+                    let t: any = this.tablebody.getElementsByTagName('table')[0];
                     let asc = t.getAttribute('asc');
                     switch (asc) {
                         case 'true':
@@ -253,8 +264,8 @@ export default class DataTable {
                             asc = null;
                     }
                     let sortByColumnName = t.getAttribute('sort_column_index') ?
-                        this.parent.getElementsByTagName('th')[t.getAttribute('sort_column_index')].innerText :
-                        this.parent.getElementsByTagName('th')[0].innerText;
+                        this.tablebody.getElementsByTagName('th')[t.getAttribute('sort_column_index')].innerText :
+                        this.tablebody.getElementsByTagName('th')[0].innerText;
                     t.main_data = sort(data_arr, keys, asc, sortByColumnName, getDisplayItemsCount(), getCurrentPageNumber());
                     rebuild();
                 });
