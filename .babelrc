@@ -1,18 +1,19 @@
 {
+    "presets": ["es2015"],
     "plugins": [
         "transform-object-rest-spread",
         "transform-flow-strip-types"
-    ],
-    "presets": [
-        [
-            "env",
-            {
-                "targets": {
-                    "browsers": [
-                        "chrome 63"
-                    ]
-                }
-            }
-        ]
-    ]
+    ]//,
+//    "presets": [
+//        [
+//            "env",
+//            {
+//                "targets": {
+//                    "browsers": [
+//                        "chrome 63"
+//                    ]
+//                }
+//            }
+//        ]
+//    ]
 }
