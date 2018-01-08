@@ -4,73 +4,73 @@ type Data = Array<{ [key: string]: any }>;
 export default class DataTable {
   parent: HTMLElement;
   data: Data;
+  context: Object;
 
   constructor(parent: HTMLElement) {
     this.parent = parent;
+    this.context = {};
   }
 
   build(data: Data) {
-    const context = this;
+    this.context = this;
     this.data_values = Object;
-    this.display_items_count = 10;
-    this.current_page_number = 0;
     this.data = data;
+
     let keys = Object.keys(data[0]);
-    let data_arr = data.map(function (e, i) {
-      return Object.values(data[i])
-    });
-    context.data_values = data_arr;
+    this.context.key_values = keys;
+    this.context.data_values = data.map(function (e, i) { return Object.values(data[i]) });
 
     /************************************************************************/
-    function sort(data_arr, data_headers, asc = true, sorted_by = null, display_count = 10, page_number = 0) {
+    function getAsc() {
+      let t = document.getElementsByTagName('table')[0];
+      return t ? t.getAttribute('asc') : null;
+    }
+    function sort_laureate_data(asc = true, sorted_by = null, display_count = 10, page_number = 0) {
       function transpose(array) {
-        let transposed = [],
-          row,
-          col;
+        let transposed = [], row, col;
         for (row = 0; row < array[0].length; row += 1) {
           transposed[row] = [];
           for (col = 0; col < array.length; col += 1) {
             transposed[row][col] = array[col][row];
           }
         }
-        ;
         return transposed;
       }
 
       function get_sorted_indices(arr) {
         let len = arr.length;
         let indices = new Array(len);
-        for (let i = 0; i < len; ++i)
-          indices[i] = i;
+        for (let i = 0; i < len; ++i) { indices[i] = i; }
         indices.sort(function (a, b) {
           return arr[a] < arr[b] ? -1 : arr[a] > arr[b] ? 1 : 0;
         });
         return indices;
       }
 
-      let from = page_number * display_count;
-      let to = page_number * display_count + display_count - 1;
-      data_arr = context.data_values.slice(from, to);
-      data_arr = asc == false ? data_arr.reverse() : data_arr;
-      // paginate array
-
-      if (asc == null) {
-        return {
-          'data': data_arr,
-          'keys': data_headers
-        }
-      }
+      debugger;
+      if (getAsc() == null) return { 'data': this.context.data_values, 'keys': this.context.key_values }
 
       // set sorted by column name
       sorted_by = sorted_by || data_headers[0];
       let sorted_column_index = data_headers.indexOf(sorted_by);
 
       // transpose data matrix to get sortable data array
-      let transposed_arr_2D = transpose(data_arr);
+      let transposed_arr_2D = transpose(this.context.data_values);
 
       // fetch indices order
       let indices = get_sorted_indices(transposed_arr_2D[sorted_column_index]);
-      if (!asc) indices = indices.reverse();
+      if (!getAsc()) {
+        debugger;
+        indices = indices.reverse();
+      }
+      let from = page_number * display_count;
+      let to = page_number * display_count + display_count - 1;
+      debugger;
+      indices = indices.slice(from, to);
+
+      //data_arr = context.data_values.slice(from, to);
+      //data_arr = asc == false ? data_arr.reverse() : data_arr;
+
 
       // build sorted matrix by ordered indices
       let sorted_arr2D = [];
@@ -81,11 +81,7 @@ export default class DataTable {
         }
         sorted_arr2D.push(sorted_row);
       });
-
-      return {
-        'data': transpose(sorted_arr2D),
-        'keys': data_headers
-      }
+      return { 'data': transpose(sorted_arr2D), 'keys': data_headers }
     }
     function buildFromArray(data, keys) {
       let table = document.createElement('table');
@@ -93,16 +89,6 @@ export default class DataTable {
       table.setAttribute('asc', true);
       document.body.appendChild(table);
       rebuild();
-    }
-    // paginate array
-    function getDisplayItemsCount() {
-      return context.display_items_count;
-    }
-    function getCurrentPageNumber() {
-      console.log("---------------");
-      console.log(context.current_page_number.toString());
-      console.log("Inspect value of : context.current_page_number ----------------------");
-      return context.current_page_number;
     }
     function bind_table_headers() {
       for (let i = 0; i < document.getElementsByTagName('th').length; i++) {
@@ -118,19 +104,16 @@ export default class DataTable {
           let new_e_asc_state;
           switch (prev_e_asc_state) {
             case null:
-              new_e_asc_state = true;
-              break;
+              new_e_asc_state = true; break;
             case true:
-              new_e_asc_state = false;
-              break;
+              new_e_asc_state = false; break;
             case false:
-              new_e_asc_state = true;
-              break;
+              new_e_asc_state = true; break;
             default:
               alert('Wrong value!!!!');
           }
           // paginate array
-          t.main_data = sort(t.main_data['data'], t.main_data['keys'], new_e_asc_state, sortByColumnName, getDisplayItemsCount(), getCurrentPageNumber());
+          t.main_data = sort_laureate_data(new_e_asc_state, sortByColumnName);
           t.setAttribute('sort_column_index', e.target.getAttribute('column_index'));
           t.setAttribute('asc', new_e_asc_state);
           e.target.setAttribute('asc', new_e_asc_state);
@@ -149,7 +132,7 @@ export default class DataTable {
         let th = document.createElement('th');
         th.innerText = key;
         if (index == table.getAttribute('sort_column_index')) {
-          th.setAttribute('asc', table.getAttribute('asc'));
+          th.setAttribute('asc', getAsc());
         }
         th.setAttribute('column_index', index);
         tr.appendChild(th);
@@ -167,7 +150,7 @@ export default class DataTable {
       bind_table_headers();
     }
 
-    let sorted = sort(data_arr, keys, true, null, getDisplayItemsCount(), getCurrentPageNumber());
+    let sorted = sort_laureate_data(true, null);
     buildFromArray(sorted['data'], sorted['keys']);
     /*************************************************************************/
     const viewPaginationButton = (): void => {
@@ -189,11 +172,10 @@ export default class DataTable {
           firstElement < value * numberOfViewElement;
         button.addEventListener('click', () => {
           firstElement = numberOfViewElement * (value - 1);
-          context.current_page_number = value;
           viewPaginationButton();
           let keys = Object.keys(data[0]);
           let t = document.getElementsByTagName('table')[0];
-          let asc = t.getAttribute('asc');
+          let asc = getAsc();
           switch (asc) {
             case 'true':
               asc = true;
@@ -208,7 +190,7 @@ export default class DataTable {
             document.getElementsByTagName('th')[t.getAttribute('sort_column_index')].innerText :
             document.getElementsByTagName('th')[0].innerText;
           /* USAGE OF data_arr VARIABLE IS DANGEROUS! */
-          t.main_data = sort(data_arr, keys, asc, sortByColumnName, getDisplayItemsCount(), getCurrentPageNumber());
+          t.main_data = sort_laureate_data(asc, sortByColumnName);
           rebuild();
         });
       };
@@ -242,14 +224,13 @@ export default class DataTable {
       select.onchange = (): void => {
         numberOfViewElement = +select.value;
         firstElement = firstElement - (firstElement % +select.value);
-        context.display_items_count = numberOfViewElement;
         let t = document.getElementsByTagName('table')[0];
         let asc = t.getAttribute('asc');
 
         let sortByColumnName = t.getAttribute('sort_column_index') ?
           document.getElementsByTagName('th')[t.getAttribute('sort_column_index')].innerText :
           document.getElementsByTagName('th')[0].innerText;
-        t.main_data = sort(t.main_data['data'], t.main_data['keys'], asc, sortByColumnName, getDisplayItemsCount(), getCurrentPageNumber());
+        t.main_data = sort_laureate_data(asc, sortByColumnName);
         rebuild();
       };
       const addSelectOption = (select: HTMLElement, value: number) => {
@@ -269,5 +250,3 @@ export default class DataTable {
     viewPaginationButton();
   }
 };
-
-
