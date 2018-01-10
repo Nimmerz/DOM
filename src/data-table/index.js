@@ -4,16 +4,17 @@ type Data = Array<{ [key: string]: any }>;
 export default class DataTable {
     parent: HTMLElement;
     data: Data;
-    data_values: Array<Array<Data>>;
+    data_values: any;
     tablebody: HTMLElement;
     selectblock: HTMLElement;
+    key_values: any;
 
     constructor(parent: HTMLElement) {
         this.parent = parent;
     }
 
     build(data: Data) {
-        let this_context = null;
+        let this_context: any = null;
         this_context = this;
         this.data_values = Object;
         this.data = data;
@@ -44,7 +45,7 @@ export default class DataTable {
         let currentPageNumber: number = 0;
         let sortByColumnName = this_context.key_values[0];
 
-        const getAsc = () => {
+        const getAsc = (): any => {
             let t = this.tablebody.getElementsByTagName('table')[0];
             if (t == null) {
                 return null;
@@ -76,8 +77,6 @@ export default class DataTable {
                 });
                 return indices;
             };
-
-
             let page_number = currentPageNumber;
             let from = page_number * numberOfElements;
             let to = numberOfElements * (page_number + 1) - 1;
@@ -92,6 +91,7 @@ export default class DataTable {
             let transposed_arr_2D = transpose(this_context.data_values);
             // fetch indices order
             let indices = get_sorted_indices(transposed_arr_2D[sorted_column_index]);
+
             if (!getAsc()) {
                 indices = indices.reverse();
             }
@@ -124,15 +124,18 @@ export default class DataTable {
                 th.addEventListener('click', (e) => {
                     let t: any = this.tablebody.getElementsByTagName('table')[0];
                     let prev_e_asc_state = e.target.getAttribute('asc');
-                    prev_e_asc_state = (prev_e_asc_state == 'true') ? true : prev_e_asc_state;
-                    prev_e_asc_state = (prev_e_asc_state == 'false') ? false : prev_e_asc_state;
+                    prev_e_asc_state = (prev_e_asc_state == 'true') ? true : prev_e_asc_state ||
+                    (prev_e_asc_state == 'false') ? false : prev_e_asc_state;
                     let new_e_asc_state = !prev_e_asc_state;
                     t.setAttribute('asc', new_e_asc_state);
                     // paginate array
-                    t.main_data = sort_laureate_data(new_e_asc_state);
                     t.setAttribute('sort_column_index', e.target.getAttribute('column_index'));
                     t.setAttribute('asc', new_e_asc_state);
                     e.target.setAttribute('asc', new_e_asc_state);
+                    sortByColumnName = e.target.innerText;
+                    let sorted = sort_laureate_data();
+                    t.main_data['data'] = sorted['data'];
+                    t.main_data['keys'] = sorted['keys'];
                     rebuild();
                 });
             };
@@ -179,7 +182,7 @@ export default class DataTable {
         select.onchange = () => {
             numberOfElements = +select.value;
             firstElement = firstElement - (firstElement % +select.value);
-            let t = this.tablebody.getElementsByTagName('table')[0];
+            let t: any = this.tablebody.getElementsByTagName('table')[0];
             let asc = t.getAttribute('asc');
             t.main_data = sort_laureate_data(asc);
             Paginations();
@@ -219,7 +222,7 @@ export default class DataTable {
                     currentPageNumber = value - 1;
                     firstElement = numberOfElements * currentPageNumber;
                     Paginations();
-                    let t = this.tablebody.getElementsByTagName('table')[0];
+                    let t: any = this.tablebody.getElementsByTagName('table')[0];
                     t.main_data = sort_laureate_data(getAsc());
                     rebuild();
                 });
